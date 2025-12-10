@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@layer theme {
+  :root {
+    /* Smooth transitions for theme changes */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    
+    /* Primary Brand Colors */
+    --color-primary: #780000;        /* Deep burgundy - Primary buttons, brand */
+    --color-primary-hover: #C1121F;  /* Bright red - Hover states, active elements */
+    
+    /* Background Colors */
+    --color-background: #FDF0D5;     /* Soft warm cream - Main background */
+    --color-surface: #ffffff;        /* White - Cards, modals */
+    
+    /* Text Colors */
+    --color-text-main: #0f5566;      /* Navy - Headings, bold text */
+    --color-text-body: rgba(0, 48, 73, 0.8);  /* Navy 80% - Body text */
+    --color-text-muted: rgba(0, 48, 73, 0.6); /* Navy 60% - Secondary text */
+    
+    /* Accent & Border Colors */
+    --color-accent: #669BBC;         /* Soft blue - Borders, dividers, icons */
+    --color-accent-light: rgba(102, 155, 188, 0.2); /* Accent 20% - Backgrounds */
+    
+    /* Status Colors */
+    --color-success: #10b981;
+    --color-error: #ef4444;
+    --color-warning: #f59e0b;
+    --color-info: #3b82f6;
+  }
+
+  /* Dark Mode Theme */
+  .dark {
+    /* Primary Brand Colors (slightly adjusted for dark) */
+    --color-primary: #C1121F;        /* Brighter red for dark mode */
+    --color-primary-hover: #E63946;  /* Even brighter on hover */
+    
+    /* Background Colors */
+    --color-background: #111827;     /* Dark gray - Main background */
+    --color-surface: #1f2937;        /* Slightly lighter gray - Cards, modals */
+    
+    /* Text Colors */
+    --color-text-main: #f9fafb;      /* Near white - Headings */
+    --color-text-body: rgba(249, 250, 251, 0.9);  /* White 90% - Body text */
+    --color-text-muted: rgba(249, 250, 251, 0.6); /* White 60% - Secondary text */
+    
+    /* Accent & Border Colors */
+    --color-accent: #669BBC;         /* Keep same blue accent */
+    --color-accent-light: rgba(102, 155, 188, 0.15); /* Accent 15% for dark */
+    
+    /* Status Colors (same) */
+    --color-success: #10b981;
+    --color-error: #ef4444;
+    --color-warning: #f59e0b;
+    --color-info: #3b82f6;
+  }
+}
+
+/* Global Styles */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-body);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings use main text color */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-main);
+  font-weight: 700;
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-primary-hover);
+  color: white;
+}
+
+::-moz-selection {
+  background-color: var(--color-primary-hover);
+  color: white;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-accent);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}

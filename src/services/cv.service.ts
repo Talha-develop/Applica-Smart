@@ -1,0 +1,193 @@
+import React from "react";
+import { pdf } from "@react-pdf/renderer";
+import { supabase } from "../lib/supabase";
+import type { Profile } from "../lib/supabase";
+
+export type CVTemplate = "modern" | "classic" | "minimal";
+
+export interface CVTemplateOption {
+  id: CVTemplate;
+  name: string;
+  description: string;
+  preview: string;
+}
+
+export const availableTemplates: CVTemplateOption[] = [
+  {
+    id: "modern",
+    name: "Modern Professional",
+    description: "Clean and contemporary design with color accents",
+    preview: "/templates/modern-preview.png",
+  },
+  {
+    id: "classic",
+    name: "Classic Traditional",
+    description: "Timeless and formal layout for traditional industries",
+    preview: "/templates/classic-preview.png",
+  },
+  {
+    id: "minimal",
+    name: "Minimal Clean",
+    description: "Simple and elegant design with maximum readability",
+    preview: "/templates/minimal-preview.png",
+  },
+];
+
+class CVService {
+  /**
+   * Generate CV PDF blob from profile data
+   */
+  async generateCVBlob(
+    profile: Profile,
+    templateId: CVTemplate
+  ): Promise<Blob> {
+    try {
+      // Dynamically import the selected template and generate PDF
+      let blob: Blob;
+
+      switch (templateId) {
+        case "modern": {
+          const { ModernTemplate } = await import(
+            "../components/cv/templates/ModernTemplate"
+          );
+          const doc = React.createElement(ModernTemplate, { profile });
+          blob = await pdf(doc as any).toBlob();
+          break;
+        }
+        case "classic": {
+          const { ClassicTemplate } = await import(
+            "../components/cv/templates/ClassicTemplate"
+          );
+          const doc = React.createElement(ClassicTemplate, { profile });
+          blob = await pdf(doc as any).toBlob();
+          break;
+        }
+        case "minimal": {
+          const { MinimalTemplate } = await import(
+            "../components/cv/templates/MinimalTemplate"
+          );
+          const doc = React.createElement(MinimalTemplate, { profile });
+          blob = await pdf(doc as any).toBlob();
+          break;
+        }
+        default:
+          throw new Error(`Unknown template: ${templateId}`);
+      }
+
+      return blob;
+    } catch (error) {
+      console.error("Error generating CV:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Download CV as PDF file
+   */
+  async downloadCV(
+    profile: Profile,
+    templateId: CVTemplate,
+    fileName?: string
+  ): Promise<void> {
+    try {
+      const blob = await this.generateCVBlob(profile, templateId);
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download =
+        fileName || `${profile.name?.replace(/\s+/g, "_")}_CV.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading CV:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Upload CV to Supabase storage
+   */
+  async uploadCV(
+    userId: string,
+    profile: Profile,
+    templateId: CVTemplate
+  ): Promise<string> {
+    try {
+      const blob = await this.generateCVBlob(profile, templateId);
+
+      // Upload to Supabase storage
+      const fileName = `${userId}/${Date.now()}_CV.pdf`;
+      const { data, error } = await supabase.storage
+        .from("cvs")
+        .upload(fileName, blob, {
+          contentType: "application/pdf",
+          upsert: true,
+        });
+
+      if (error) throw error;
+
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("cvs").getPublicUrl(data.path);
+
+      // Update profile with CV link
+      await supabase
+        .from("profiles")
+        .update({ cv_link: publicUrl })
+        .eq("id", userId);
+
+      return publicUrl;
+    } catch (error) {
+      console.error("Error uploading CV:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save CV document record to database
+   */
+  async saveCVRecord(
+    userId: string,
+    templateId: CVTemplate,
+    fileUrl: string
+  ): Promise<void> {
+    try {
+      const { error } = await supabase.from("cv_documents").insert({
+        user_id: userId,
+        template_used: templateId,
+        file_url: fileUrl,
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error saving CV record:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user's CV history
+   */
+  async getCVHistory(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from("cv_documents")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error fetching CV history:", error);
+      throw error;
+    }
+  }
+}
+
+export const cvService = new CVService();
